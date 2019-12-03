@@ -1,0 +1,561 @@
+★동기화와 비동기화
+
+비동기화 : 효율적이지만 복잡하다
+콜백? : 
+function (err, result){}
+
+readFile'Sync' -> 동기화
+readFile -> 비동기
+
+자바스크립트에서 함수는 값이다!
+
+콜백함수란?
+
+var a = function(){
+console.log('A');
+}
+
+처럼 변수에 함수를 지정해주거나,
+함수 자체를 선언해주면
+
+해당 함수를 또다시 함수내에서 선언하면
+어떤 매개변수를 넣든 해당 함수가 불려나오는 것을 의미한다.
+
+★case1
+
+var a = function(){
+  console.log('A');
+}
+
+function slowfunc(callback){
+  callback();
+}
+
+slowfunc(a);
+
+★case2
+
+function callback(){
+  console.log('A');
+}
+
+function slowfunc(a){
+  a();
+}
+
+slowfunc(callback);
+
+
+★패키지매니저와 PM2
+
+npm install pm2 -g
+-> PM2 설치경로
+
+pm2 start app.js
+->PM2 실행
+
+pm2 list
+->실행중인 리스트
+
+pm2 stop (run name)
+->실행중인 프로그램 중지
+
+pm2 start main.js --watch
+->해당 프로그램 감시(꺼지면 자동으로 되살림)
+
+pm2 log
+->오류가 있을시  로그로 바로 보여줌
+
+★HTML form
+get할때(서버에서 데이터를 가져올떄)는
+/?~ 하는 쿼리스트링을 사용하고
+
+서버에 데이터를 생성하거나 수정, 삭제할때는
+필요한 데이터를 URL로 보내면 안됨.
+눈에 보이지 않는 방식을 보내야 함.
+이럴때 method로  post방식.
+
+
+★글생성UI를 만들기
+var http = require('http');
+var fs = require('fs');
+//require 요구하다 무엇을? url을.
+//기능을 비슷한 것 끼리 그룹핑 해놓은 것을 모듈이라고 함. url이라는 모듈을 사용
+var url = require('url');
+
+function templateHTML(title, list, body) {
+
+  return `
+          <!doctype html>
+          <html>
+          <head>
+          <title>WEB1 - ${title}</title>
+          <meta charset="utf-8">
+          </head>
+          <body>
+          <h1><a href="/">WEB1</a></h1>
+          ${list}
+          ${body}
+          </body>
+          </html>
+          `;
+}
+
+function templateList(filelist){
+  var list = '<ul>';
+  var i = 0;
+  while (i < filelist.length) {
+    list = list + `<li><a href = "/?id = ${filelist[i]}">${filelist[i]}</a></li>`;
+    i++;
+  }
+  list = list + '</ul>';
+  return list;
+}
+
+
+
+var app = http.createServer(function (request, response) {
+  var _url = request.url;
+  //queryData에 담겨있는 값은 객체이다.
+  var queryData = url.parse(_url, true).query;
+  // console.log(require('url').parse(request.url, true));
+  var pathname = url.parse(_url, true).pathname;
+
+
+  //주어진 URL정보를 분석해서 보여준다.
+  // console.log(url.parse(_url, true));
+  // console.log(url.parse(_url, true).pathname);
+
+  if (pathname === '/') {
+    if (queryData.id === undefined) {
+
+      fs.readdir('./data', function (error, filelist) {
+        console.log(filelist);
+        var title = 'Welcome';
+        var description = "Hello, Node.js";
+        var list = templateList(filelist);
+        var template = templateHTML(title, list, `<h2>${title}</h2>${description}`);
+        response.writeHead(200);
+        // response.end(fs.readFileSync(__dirname + url));
+        //사용자가 접속한 url에 따라서 다른 파일들을 읽어주는 코드
+        //queryData.id에서  template로 변경
+        response.end(template);
+      })
+    } else {
+      fs.readdir('./data', function (error, filelist) {
+        
+        //data디렉토리 밑에 있는 queryData.id =title
+        fs.readFile(`data/${queryData.id}`, 'utf8', function (err, description) {
+          var title = queryData.id;
+          var list = templateList(filelist);
+          var template = templateHTML(title, list, `<h2>${title}</h2>${description}`);
+          response.writeHead(200);
+          // response.end(fs.readFileSync(__dirname + url));
+          //사용자가 접속한 url에 따라서 다른 파일들을 읽어주는 코드
+          //queryData.id에서  template로 변경
+          response.end(template);
+        });
+      });
+    }
+  } else {
+    response.writeHead(404);
+    response.end('Not Found');
+  }
+});
+app.listen(3000);
+
+●에서
+
+var http = require('http');
+var fs = require('fs');
+//require 요구하다 무엇을? url을.
+//기능을 비슷한 것 끼리 그룹핑 해놓은 것을 모듈이라고 함. url이라는 모듈을 사용
+var url = require('url');
+
+function templateHTML(title, list, body) {
+
+  return `
+          <!doctype html>
+          <html>
+          <head>
+          <title>WEB1 - ${title}</title>
+          <meta charset="utf-8">
+          </head>
+          <body>
+          <h1><a href="/">WEB1</a></h1>
+          ${list}
+          <a href="/create">create</a>
+          ${body}
+          </body>
+          </html>
+          `;
+}
+
+function templateList(filelist){
+  var list = '<ul>';
+  var i = 0;
+  while (i < filelist.length) {
+    list = list + `<li><a href = "/?id = ${filelist[i]}">${filelist[i]}</a></li>`;
+    i++;
+  }
+  list = list + '</ul>';
+  return list;
+}
+
+
+
+var app = http.createServer(function (request, response) {
+  var _url = request.url;
+  //queryData에 담겨있는 값은 객체이다.
+  var queryData = url.parse(_url, true).query;
+  // console.log(require('url').parse(request.url, true));
+  var pathname = url.parse(_url, true).pathname;
+
+
+  //주어진 URL정보를 분석해서 보여준다.
+  // console.log(url.parse(_url, true));
+  // console.log(url.parse(_url, true).pathname);
+
+  if (pathname === '/') {
+    if (queryData.id === undefined) {
+
+      fs.readdir('./data', function (error, filelist) {
+        console.log(filelist);
+        var title = 'Welcome';
+        var description = "Hello, Node.js";
+        var list = templateList(filelist);
+        var template = templateHTML(title, list, `<h2>${title}</h2>${description}`);
+        response.writeHead(200);
+        // response.end(fs.readFileSync(__dirname + url));
+        //사용자가 접속한 url에 따라서 다른 파일들을 읽어주는 코드
+        //queryData.id에서  template로 변경
+        response.end(template);
+      })
+    } else {
+      fs.readdir('./data', function (error, filelist) {
+        
+        //data디렉토리 밑에 있는 queryData.id =title
+        fs.readFile(`data/${queryData.id}`, 'utf8', function (err, description) {
+          var title = queryData.id;
+          var list = templateList(filelist);
+          var template = templateHTML(title, list, `<h2>${title}</h2>${description}`);
+          response.writeHead(200);
+          // response.end(fs.readFileSync(__dirname + url));
+          //사용자가 접속한 url에 따라서 다른 파일들을 읽어주는 코드
+          //queryData.id에서  template로 변경
+          response.end(template);
+        });
+      });
+    }
+  } else if(pathname === '/create'){
+    fs.readdir('./data', function (error, filelist) {
+      console.log(filelist);
+      var title = 'WEB - create';
+      var list = templateList(filelist);
+      var template = templateHTML(title, list, `
+      <!-- form 태그는 submit시 action 이 가리키는 곳으로 각각의 속성을 보내는 기능 -->
+<form action="http://localhost:3000/process_create" method="post">
+  <p><input type="text" name="title" placeholder="title"></p>
+  <p>
+    <textarea name="description" placeholder="description"></textarea>
+  </p>
+  <p>
+    <input type="submit">
+  </p>
+</form>
+      `);
+      response.writeHead(200);
+      // response.end(fs.readFileSync(__dirname + url));
+      //사용자가 접속한 url에 따라서 다른 파일들을 읽어주는 코드
+      //queryData.id에서  template로 변경
+      response.end(template);
+    })
+  } else {
+    response.writeHead(404);
+    response.end('Not Found');
+  }
+});
+app.listen(3000);
+
+form.html 태그를 이용하여 패스네임이 일치하는 조건을
+걸어서 해당 패스네임에 해당하는 페이지 구
+
+
+★POST방식으로 전송된 데이터 받기
+var http = require('http');
+var fs = require('fs');
+//require 요구하다 무엇을? url을.
+//기능을 비슷한 것 끼리 그룹핑 해놓은 것을 모듈이라고 함. url이라는 모듈을 사용
+var url = require('url');
+var qs = require(`querystring`);
+
+function templateHTML(title, list, body) {
+
+  return `
+          <!doctype html>
+          <html>
+          <head>
+          <title>WEB1 - ${title}</title>
+          <meta charset="utf-8">
+          </head>
+          <body>
+          <h1><a href="/">WEB1</a></h1>
+          ${list}
+          <a href="/create">create</a>
+          ${body}
+          </body>
+          </html>
+          `;
+}
+
+function templateList(filelist){
+  var list = '<ul>';
+  var i = 0;
+  while (i < filelist.length) {
+    list = list + `<li><a href = "/?id = ${filelist[i]}">${filelist[i]}</a></li>`;
+    i++;
+  }
+  list = list + '</ul>';
+  return list;
+}
+
+
+
+var app = http.createServer(function (request, response) {
+  var _url = request.url;
+  //queryData에 담겨있는 값은 객체이다.
+  var queryData = url.parse(_url, true).query;
+  // console.log(require('url').parse(request.url, true));
+  var pathname = url.parse(_url, true).pathname;
+
+
+  //주어진 URL정보를 분석해서 보여준다.
+  // console.log(url.parse(_url, true));
+  // console.log(url.parse(_url, true).pathname);
+
+  if (pathname === '/') {
+    if (queryData.id === undefined) {
+
+      fs.readdir('./data', function (error, filelist) {
+        console.log(filelist);
+        var title = 'Welcome';
+        var description = "Hello, Node.js";
+        var list = templateList(filelist);
+        var template = templateHTML(title, list, `<h2>${title}</h2>${description}`);
+        response.writeHead(200);
+        // response.end(fs.readFileSync(__dirname + url));
+        //사용자가 접속한 url에 따라서 다른 파일들을 읽어주는 코드
+        //queryData.id에서  template로 변경
+        response.end(template);
+      })
+    } else {
+      fs.readdir('./data', function (error, filelist) {
+        
+        //data디렉토리 밑에 있는 queryData.id =title
+        fs.readFile(`data/${queryData.id}`, 'utf8', function (err, description) {
+          var title = queryData.id;
+          var list = templateList(filelist);
+          var template = templateHTML(title, list, `<h2>${title}</h2>${description}`);
+          response.writeHead(200);
+          // response.end(fs.readFileSync(__dirname + url));
+          //사용자가 접속한 url에 따라서 다른 파일들을 읽어주는 코드
+          //queryData.id에서  template로 변경
+          response.end(template);
+        });
+      });
+    }
+  } else if(pathname === '/create'){
+    fs.readdir('./data', function (error, filelist) {
+      console.log(filelist);
+      var title = 'WEB - create';
+      var list = templateList(filelist);
+      var template = templateHTML(title, list, `
+      <!-- form 태그는 submit시 action 이 가리키는 곳으로 각각의 속성을 보내는 기능 -->
+<form action="http://localhost:3000/create_process" method="post">
+  <p><input type="text" name="title" placeholder="title"></p>
+  <p>
+    <textarea name="description" placeholder="description"></textarea>
+  </p>
+  <p>
+    <input type="submit">
+  </p>
+</form>
+      `);
+      response.writeHead(200);
+      // response.end(fs.readFileSync(__dirname + url));
+      //사용자가 접속한 url에 따라서 다른 파일들을 읽어주는 코드
+      //queryData.id에서  template로 변경
+      response.end(template);
+    })
+  } else if(pathname === '/create_process'){
+
+    var body = ``;
+    //post방식으로 전송되는 데이터가 많을 경우
+    //서버쪽에서 조각조각 데이터를 받을시마다 함수 호출,
+    //function의 data인자를 통해 데이터를 받기로 함
+    request.on(`data`, function(data){
+      body = body + data;
+    });
+    //end에 해당되는 콜백이 실행됐을시, 수신이 끝났다고 생각할 수 있음
+    request.on(`end`, function(){
+    //post변수에 post전송내용이 들어있다.
+      var post = qs.parse(body);
+      var title = post.title;
+      var description = post.description;
+      console.log(title, description);
+      
+    });
+      response.writeHead(200);
+      response.end('success');
+  } else {
+    response.writeHead(404);
+    response.end('Not Found');
+  }
+});
+app.listen(3000);
+
+
+어떻게 post방식의 데이터를 받냐?
+
+★post방식으로 전송된 데이터를 데이터 디렉토리 안에
+파일의 형태로 저장하는 방법과
+
+리다이렉션
+var http = require('http');
+var fs = require('fs');
+//require 요구하다 무엇을? url을.
+//기능을 비슷한 것 끼리 그룹핑 해놓은 것을 모듈이라고 함. url이라는 모듈을 사용
+var url = require('url');
+var qs = require(`querystring`);
+
+function templateHTML(title, list, body) {
+
+  return `
+          <!doctype html>
+          <html>
+          <head>
+          <title>WEB1 - ${title}</title>
+          <meta charset="utf-8">
+          </head>
+          <body>
+          <h1><a href="/">WEB1</a></h1>
+          ${list}
+          <a href="/create">create</a>
+          ${body}
+          </body>
+          </html>
+          `;
+}
+
+function templateList(filelist){
+  var list = '<ul>';
+  var i = 0;
+  while (i < filelist.length) {
+    list = list + `<li><a href = "/?id = ${filelist[i]}">${filelist[i]}</a></li>`;
+    i++;
+  }
+  list = list + '</ul>';
+  return list;
+}
+
+
+
+var app = http.createServer(function (request, response) {
+  var _url = request.url;
+  //queryData에 담겨있는 값은 객체이다.
+  var queryData = url.parse(_url, true).query;
+  // console.log(require('url').parse(request.url, true));
+  var pathname = url.parse(_url, true).pathname;
+
+
+  //주어진 URL정보를 분석해서 보여준다.
+  // console.log(url.parse(_url, true));
+  // console.log(url.parse(_url, true).pathname);
+
+  if (pathname === '/') {
+    if (queryData.id === undefined) {
+
+      fs.readdir('./data', function (error, filelist) {
+        console.log(filelist);
+        var title = 'Welcome';
+        var description = "Hello, Node.js";
+        var list = templateList(filelist);
+        var template = templateHTML(title, list, `<h2>${title}</h2>${description}`);
+        response.writeHead(200);
+        // response.end(fs.readFileSync(__dirname + url));
+        //사용자가 접속한 url에 따라서 다른 파일들을 읽어주는 코드
+        //queryData.id에서  template로 변경
+        response.end(template);
+      })
+    } else {
+      fs.readdir('./data', function (error, filelist) {
+        
+        //data디렉토리 밑에 있는 queryData.id =title
+        fs.readFile(`data/${queryData.id}`, 'utf8', function (err, description) {
+          var title = queryData.id;
+          var list = templateList(filelist);
+          var template = templateHTML(title, list, `<h2>${title}</h2>${description}`);
+          response.writeHead(200);
+          // response.end(fs.readFileSync(__dirname + url));
+          //사용자가 접속한 url에 따라서 다른 파일들을 읽어주는 코드
+          //queryData.id에서  template로 변경
+          response.end(template);
+        });
+      });
+    }
+  } else if(pathname === '/create'){
+    fs.readdir('./data', function (error, filelist) {
+      console.log(filelist);
+      var title = 'WEB - create';
+      var list = templateList(filelist);
+      var template = templateHTML(title, list, `
+      <!-- form 태그는 submit시 action 이 가리키는 곳으로 각각의 속성을 보내는 기능 -->
+<form action="http://localhost:3000/create_process" method="post">
+  <p><input type="text" name="title" placeholder="title"></p>
+  <p>
+    <textarea name="description" placeholder="description"></textarea>
+  </p>
+  <p>
+    <input type="submit">
+  </p>
+</form>
+      `);
+      response.writeHead(200);
+      // response.end(fs.readFileSync(__dirname + url));
+      //사용자가 접속한 url에 따라서 다른 파일들을 읽어주는 코드
+      //queryData.id에서  template로 변경
+      response.end(template);
+    })
+  } else if(pathname === '/create_process'){
+
+    var body = ``;
+    //post방식으로 전송되는 데이터가 많을 경우
+    //서버쪽에서 조각조각 데이터를 받을시마다 함수 호출,
+    //function의 data인자를 통해 데이터를 받기로 함
+    request.on(`data`, function(data){
+      body = body + data;
+    });
+    //end에 해당되는 콜백이 실행됐을시, 수신이 끝났다고 생각할 수 있음
+    request.on(`end`, function(){
+    //post변수에 post전송내용이 들어있다.
+      var post = qs.parse(body);
+      var title = post.title;
+      var description = post.description;
+      console.log(title, description);
+      //콜백이 실행된다는 것은 파일의 저장이 끝난것을 의미
+      fs.writeFile(`data/${title}`, description, `utf8`, 
+      function(err){
+        //다른곳으로 리다이렉션 302
+        response.writeHead(302, {Location: `/?id=${title}`});
+        response.end();
+      })
+    });
+  } else {
+    response.writeHead(404);
+    response.end('Not Found');
+  }
+});
+app.listen(3000);
+
+
+

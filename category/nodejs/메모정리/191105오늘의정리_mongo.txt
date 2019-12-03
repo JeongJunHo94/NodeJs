@@ -1,0 +1,103 @@
+★Orientation
+
+DBMS?
+->데이터베이스 매니지먼트 시스템
+
+MySQL/SQL Server/SQLite/PostgreSQL
+->관계형 데이터베이스
+
+디렉토리를 왜만들어? 
+-데이터베이스를 저장할 폴더
+
+mongo --version
+
+mkdir c:\data\db
+-해당 명령을 통해 디렉토리 생성
+
+mongod로 서버 구동
+
+다른 cmd창으로 mongo 명령어로 서버 접속
+
+mongoDB의 특징? : NoSQL
+Not only SQL
+-관계형 모델을 사용하지 않는다
+스키마 없이 동작한다.
+
+왜 NoSQL이냐?
+ACID를 지키지 않는다.
+->속도가 빠르다
+Sharding이 더 용이하다.
+->대규모 데이터에 적합하다.
+
+ACID? RDBMS의 원칙
+Atomicity 원자성
+Consistency 일관성
+Isolation 독립성
+Durability 지속성
+
+Atomicity 원자성
+->트랜잭션과 관련된 작업들이 부분적으로 실행되다가 중단되지 않는 것을 보장하는 능력이다.
+MongoDB는 각각의 Document에 대해 원자성을 지닌다.
+-여러 Document에 대해서도 만족하려면 $Isolated operator를 사용해야한다.
+
+Consistency 일관성
+->트랜잭션이 실행을 성공적으로 완료하면 언제나 일관성있는 데이터베이스 상태로 유지해야한다
+무결성 제약조건, 비명시적 조건과 같은 조건이 전 후에도 지켜져야 한다.
+-MongoDb는 Database수준까지 일관성을 유지한다.
+
+Isolation 독립성
+->여러 트랜잭션이 동시에 수행되더라도 각각의 트랜잭션은 다른 트랜잭션의 수행에 영향을 받지 않고 독립적으로 수행되어야 한다
+-특정 명령어에 대해서 일정 수준의 독립성이 보장된다.
+
+Durability 지속성
+->트랜잭션이 성공적으로 완료되어 커밋되고 나면, 해당 트랜잭션에 의한 모든 변경은 향후에 어떤 소프트웨어나 하드웨어 장애가 발생 되더라도 보존되어야 한다는 것을 의미한다.
+-MongoDB 는 Replica set을 설정하면 DB수준에서 보존된다.
+
+
+
+BASE
+Basically Available
+Soft state
+Eventually consistent
+
+Basically Available -> 가용성, 기본적으로 언제든지 사용할 수 있다. 다수의 사용자가 DB를 사용할 수 없는 상황이 와도 금방 다시 사용할 수 있는 상태로 바뀐다.
+기본적인 가용성을 지닌다. 
+
+Soft state ->
+외부의 개입 없이도 정보가 바뀔 수 있다는 의미이다.
+이것은 Eventually consistent특성 때문에 필요한 특성이다.
+
+Eventually consistent->일관적인 상태가 되는 성질,
+시스템상에서 일시적으로 일관적이지 않은 상태가 되어도 일정 시간 후에는 일관적 상태가 되는 성질이다.
+
+Database
+Collection
+Document의 3단구조
+
+Document = JSON과 비슷한 BSON구조로 되어있음
+BSON은 Field와 value을 가지고 있다-> 자바 해쉬맵
+
+★Database와 Collection만들기
+use testDB
+db.myCollection.insertOne({x:1})
+-> 잘 들어갔는지 확인하려면
+db.myCollection.find() (모든 요소조회)
+insertOne명령어가 testDB와 myCollection이 없으면
+생성해서 Document {x:1}을 넣는다.
+
+★BSON의 데이터타입
+BSON이란?-> Binary JSON의 의미. JSON? js에서 쓰이는 데이터의 표현방식
+JSON의 일부로써 MongoDB에서 데이터를 저장하기 위한 형식
+
+Timestamp
+-Timestamp(1412180887, 1)
+Date
+-ISODate("2019-11-05T05:02:46.395Z")
+ObjectId->MongoDB에서 각 Document의 primary key의 값으로 사용된다.
+-ObjectId("542c2b97 bac059 5474 108b48")
+-ObjectId("542c2b97/유닉스시간 bac059/기기id 
+5474/프로세스id 108b48/카운터")
+
+
+
+

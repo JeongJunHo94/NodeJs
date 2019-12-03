@@ -1,0 +1,71 @@
+★배열 연산자
+
+
+$all 연산자(쿼리값을 만족하는 모든 값찾기)
+{ <field>: { $all: [ <value1> , <value2> ... ] } }
+> db.articles.find( { tags: { $all: ["school", "book"] } } )
+
+{ <field>: { $all: [ <value1> , <value2> ... ] } }
+배열 속 모든 값을 포함하는 Document를 찾는다
+는 아래와 같고
+{ $and: [{<field>: <value1>} ,{<field>: <value2>} ... ] }
+A이고 B인 값을 포함하는 Document를 찾는다
+
+{ field: { $in: [<value1>, <value2>, ... ] } }
+배열 속 어떤 값을 포함하는 Document를 찾는다
+는 아래와 같다
+{ $or: [{<field>: <value1>} ,{<field>: <value2>} ... ] }
+A또는 B인 값을 포함하는 Document를 찾는다
+
+
+$elemMatch연산자(쿼리값을 만족하는 '배열' 값찾기)
+해당 field가 query들을 만족하는 값을 갖는 '배열'Document를 선택
+
+{ <field>: { $elemMatch: { <query1>, <query2>, ... } } }
+db.scores.find( { results: { $elemMatch: { $gte: 80, $lte: 85 } } } )
+
+elemMatch로 매칭되는 모든 값들이 하나라도 query를 만족해야한다.
+
+elemMatch연산자는 배열만 검색이 가능하다.
+모든 값을 검색하려면 elemMatch를 지우고 find+조건문만으로 검색
+
+
+$size 연산자(쿼리값을 만족하는 길이를 가진 배열찾기)
+
+해당 field가 모든 query들을 만족하는 값을 갖는 Document를 선택
+{ <field>: { $size: <array size> } }
+db.scores.find( { results: {$size: 3} } )
+
+{ item: "",status: "",size:{h:, w:, uom:""},instock:[{warehouse:"",qty:}]},
+
+db.inventory.insertMany([
+... { item: "journal",status: "A",size:{h:14, w:21, uom:"cm"},instock:[{warehouse:"A",qty:5}]},
+... { item: "notebook",status: "A",size:{h:8.5, w:11, uom:"in"},instock:[{warehouse:"C",qty:5}]},
+... { item: "paper",status: "D",size:{h:8.5, w:11, uom:"in"},instock:[{warehouse:"A",qty:60}]},
+... { item: "planner",status: "D",size:{h:22.85, w:30, uom:"cm"},instock:[{warehouse:"A",qty:40}]},
+... { item: "postcard",status: "A",size:{h:10, w:15.25, uom:"cm"},instock:[{warehouse:"B",qty:15},{warehouse:"C",qty:35}]},
+... { item: "hat",status: "B",size:{h:12, w:12, uom:"cm"},instock:[{warehouse:"C",qty:20}]},
+... { item: "shovel",status: "B",size:{h:80, w:12, uom:"cm"},instock:[{warehouse:"C",qty:100}]},
+... { item: "broom",status: "C",size:{h:80, w:8, uom:"cm"},instock:[{warehouse:"A",qty:5},{warehouse:"C",qty:5}]}])
+
+
+Query 연습문제 
+
+문제1. 창고정리의 시즌이 돌아와 먼지를 뒤집어쓴 창고에서 물품을 정리해야 한다.
+측정된 물품의 단위가 in인 물품을 cm로 바꾸려고 한다.
+단위가 in인 물품의 목록을 찾아보자.
+
+->
+> db.inventory.find({"size.uom":"in"})
+
+
+문제2. 창고에 C급, D급인 물품을 찾아서 절반정도의 물량을 창고에서 버리려고 한다. 창고에 C급,D급인 물품을 모두 찾아보자.
+
+->
+> db.inventory.find({$or:[{status:"C"},{status:"D"}]})
+
+문제3. B창고에 길고 가느다란 공간이 비어서 그 빈 공간을 채우기 위해 폭(w)이 15cm보다 작고 높이(h)가 50cm이상, 100cm이하인 물품을 찾아서 채워넣으려고 한다.
+
+->($and {size.w : $lte : 15,},{uom:"cm"},{size.h: $gte: 50},{size.h: $lte : 100}}
+
+ db.inventory.find({$and:[{"size.w":{$lte:15}},{"size.h":{$gte:50}},{"size.h":{$lte:100}}]})

@@ -1,0 +1,117 @@
+mongo Shell에서 쓰이는 문법은
+기본적으로 javascript로 되어 있음.
+
+use.data
+db.user.insertOne{username:"karoid",password:1111})
+db.user.insertOne({username:"hello",password:1111})
+db.course.insertOne({username:"mongoDB",grade:1})
+
+database를 사용하려면 
+user<database>로 사용
+
+★골칫덩이 데이터삭제
+실수로 엄한 콜렉션을 생성해버렸을때.
+
+1.해당 db속에 있는 데이터만 삭제
+db.test.remove({ });
+db.monsters.remove({ name: 'Zerp' }); // WriteResult({ 'nRemoved': 1 })
+
+2.데이터 자체를 드랍
+->해당 데이터베이스에 접속 후, db.dropDatabase()
+명령어를 통해 drop 시킨다
+show dbs
+admin   0.000GB
+local   0.000GB
+test    0.000GB
+testDB  0.000GB
+> use testDB
+switched to db testDB
+> db.dropDatabase()
+{ "dropped" : "testDB", "ok" : 1 }
+> show dbs
+admin  0.000GB
+local  0.000GB
+test   0.000GB
+
+
+콜렉션 이름변경
+
+> show dbs
+admin   0.000GB
+config  0.000GB
+local   0.000GB
+test    0.000GB
+> use test
+switched to db test
+> show collections
+collections
+course
+user
+> db.collections.renameCollection("first");
+{ "ok" : 1 }
+> show collections
+course
+first
+user
+>
+
+
+★Document조회시 이쁘게 보이는 명령어
+ db.user.find().pretty()
+
+단일,다수의 데이터 입력시
+
+writeConcern : 지연 처리
+ordered : 정렬
+
+여러객체 동시 입력
+var i = db.user.insertMany([{username:"hi",password:1111},{username:"kkk",passward:1111}])
+> i
+{
+        "acknowledged" : true,
+        "insertedIds" : [
+                ObjectId("5dc2bee63cea8f8ca57ca2fc"),
+                ObjectId("5dc2bee63cea8f8ca57ca2fd")
+        ]
+}
+
+//특정 필드값을 가진 데이터 불러오기
+> db.user.find().pretty()
+{
+        "_id" : ObjectId("5dc26e23ddf190c3dccf28d2"),
+        "username" : "karoid",
+        "password" : 1111
+}
+{
+        "_id" : ObjectId("5dc26e2bddf190c3dccf28d3"),
+        "username" : "hello",
+        "password" : 1111
+}
+{
+        "_id" : ObjectId("5dc2bee63cea8f8ca57ca2fc"),
+        "username" : "hi",
+        "password" : 1111
+}
+{
+        "_id" : ObjectId("5dc2bee63cea8f8ca57ca2fd"),
+        "username" : "kkk",
+        "passward" : 1111
+}
+> db.user.find({username:"karoid"}).pretty()
+{
+        "_id" : ObjectId("5dc26e23ddf190c3dccf28d2"),
+        "username" : "karoid",
+        "password" : 1111
+}
+
+projection
+
+> db.user.find({password:1111},{username:true}).pretty()
+{ "_id" : ObjectId("5dc26e23ddf190c3dccf28d2"), "username" : "karoid" }
+{ "_id" : ObjectId("5dc26e2bddf190c3dccf28d3"), "username" : "hello" }
+{ "_id" : ObjectId("5dc2bee63cea8f8ca57ca2fc"), "username" : "hi" }
+> db.user.find({password:1111},{username:false}).pretty()
+{ "_id" : ObjectId("5dc26e23ddf190c3dccf28d2"), "password" : 1111 }
+{ "_id" : ObjectId("5dc26e2bddf190c3dccf28d3"), "password" : 1111 }
+{ "_id" : ObjectId("5dc2bee63cea8f8ca57ca2fc"), "password" : 1111 }
+>

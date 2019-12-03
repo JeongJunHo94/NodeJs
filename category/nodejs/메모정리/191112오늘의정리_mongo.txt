@@ -1,0 +1,291 @@
+★★Update 명령어
+
+
+>db.collection.updateOne(<query>,<update>,{upsert: <boolean>,writeConcern:<document>,collation: <document>})
+
+★update query 구성 
+
+>db.collection.updateOne(
+<query>, //검색할 쿼리문
+<update>, //수정할내용 
+{
+upsert: <boolean>, //query단계에서 일치하는 값을 찾지 못했을시, update내용과 같은 새로운 document를 생성
+writeConcern: <document>, //지연입력
+collation: <document> 
+}
+)
+
+★replace query 구성
+>db.collection.replaceOne(
+<filter>, //적용할 범위
+<replacement>,//교체할 document
+{
+upsert: <boolean>, //검색실패시 새로운 document생성
+writeConcern: <document>, //지연입력
+collation: <document>
+}
+)
+
+
+★특정 field 업데이트 하기 ->$set
+> db.inventory.find({"item":"canvas"}).pretty()
+{
+        "_id" : ObjectId("5dca50ec99829b057884b7e5"),
+        "item" : "canvas",
+        "qty" : 100,
+        "size" : {
+                "h" : 28,
+                "w" : 35.5,
+                "uom" : "cm"
+        },
+        "status" : "A"
+}
+> db.inventory.updateOne( { item: "canvas" }, { $set: { "size.h": 20 } } )
+{ "acknowledged" : true, "matchedCount" : 1, "modifiedCount" : 1 }
+> db.inventory.find({"item":"canvas"}).pretty()
+{
+        "_id" : ObjectId("5dca50ec99829b057884b7e5"),
+        "item" : "canvas",
+        "qty" : 100,
+        "size" : {
+                "h" : 20,
+                "w" : 35.5,
+                "uom" : "cm"
+        },
+        "status" : "A"
+}
+
+★document를 replace 하기
+
+
+db.inventory.replaceOne( { item: "journal" }, { item: "journal", sold_id:[1,2,3,4,10,14]})
+
+
+> db.inventory.find({item : "journal"}).pretty()
+{
+        "_id" : ObjectId("5dca50ec99829b057884b7e6"),
+        "item" : "journal",
+        "qty" : 25,
+        "size" : {
+                "h" : 14,
+                "w" : 21,
+                "uom" : "cm"
+        },
+        "status" : "A"
+}
+>
+> db.inventory.replaceOne( { item: "journal" }, { item: "journal", sold_id:[1,2,3,4,10,14]})
+{ "acknowledged" : true, "matchedCount" : 1, "modifiedCount" : 1 }
+> db.inventory.find({item : "journal"}).pretty()
+{
+        "_id" : ObjectId("5dca50ec99829b057884b7e6"),
+        "item" : "journal",
+        "sold_id" : [
+                1,
+                2,
+                3,
+                4,
+                10,
+                14
+        ]
+}
+>
+
+id는 변함이 없고, 기존값에서 replace값으로 변경되었다.
+
+
+★특정 field를 제거하기 ->$unset
+db.inventory. updateOne( { item: "mat" }, { $unset: {status: 1} }) -> 1은 true를 의미
+
+
+★해당되는 document가 없다면 새로 추가하기 ->$upsert:true
+db.inventory. updateOne( { item: "flash" }, { $set: {size: {h: 10, w: 8} ,status: "F"} }, {upsert: true})
+
+
+> db.inventory. updateOne( { item: "flash" }, { $set: {size: {h: 10, w: 8} ,status: "F"} }
+... )
+{ "acknowledged" : true, "matchedCount" : 0, "modifiedCount" : 0 }
+> db.inventory. updateOne( { item: "flash" }, { $set: {size: {h: 10, w: 8} ,status: "F"} }, {upsert: true})
+{
+        "acknowledged" : true,
+        "matchedCount" : 0,
+        "modifiedCount" : 0,
+        "upsertedId" : ObjectId("5dca5e079ef584a18f08490b")
+}
+>
+
+
+★여러 document의 특정 field를 수정하기
+db.inventory. updateMany( { "size.h": { $lte: 10 } }, { $set : {mini: true} })
+
+
+{"item" : "notebook", "qty" : 50, "size" : { "h" : 8.5, "w" : 11, "uom" : "in" }, "status" : "P" }
+{"item" : "paper", "qty" : 100, "size" : { "h" : 8.5, "w" : 11, "uom" : "in" }, "status" : "D" }
+{"item" : "postcard", "qty" : 45, "size" : { "h" : 10, "w" : 15.25, "uom" : "cm" }, "status" : "A" }
+{"item" : "flash", "size" : { "h" : 10, "w" : 8 }, "status" : "F" }
+
+↓
+
+{"item" : "notebook", "qty" : 50, "size" : { "h" : 8.5, "w" : 11, "uom" : "in" }, "status" : "P", mini: true }
+{"item" : "paper", "qty" : 100, "size" : { "h" : 8.5, "w" : 11, "uom" : "in" }, "status" : "D" , mini: true}
+{"item" : "postcard", "qty" : 45, "size" : { "h" : 10, "w" : 15.25, "uom" : "cm" }, "status" : "A" , mini: true}
+{"item" : "flash", "size" : { "h" : 10, "w" : 8 }, "status" : "F" , mini: true}
+
+
+★배열에 값 추가하기 ->$push
+db.inventory. updateOne( { item: "journal" }, { $push: {sold_id: 15 }})
+
+
+> db.inventory.find({item:"journal"})
+{ "_id" : ObjectId("5dca50ec99829b057884b7e6"), "item" : "journal", "sold_id" : [ 1, 2, 3, 4, 10, 14 ] }
+> db.inventory. updateOne( { item: "journal" }, { $push: {sold_id: 15 }})
+{ "acknowledged" : true, "matchedCount" : 1, "modifiedCount" : 1 }
+> db.inventory.find({item:"journal"})
+{ "_id" : ObjectId("5dca50ec99829b057884b7e6"), "item" : "journal", "sold_id" : [ 1, 2, 3, 4, 10, 14, 15 ] }
+>
+
+★배열에 값 여러개 추가하기 ->$push + $each
+db.inventory. updateOne( { item: "journal" }, { $push: {sold_id: {$each: [20,25]} }})
+
+
+> db.inventory.find({item:"journal"})
+{ "_id" : ObjectId("5dca50ec99829b057884b7e6"), "item" : "journal", "sold_id" : [ 1, 2, 3, 4, 10, 14, 15 ] }
+> db.inventory. updateOne( { item: "journal" }, { $push: {sold_id: {$each: [20,25]} }})
+{ "acknowledged" : true, "matchedCount" : 1, "modifiedCount" : 1 }
+>
+> db.inventory.find({item:"journal"})
+{ "_id" : ObjectId("5dca50ec99829b057884b7e6"), "item" : "journal", "sold_id" : [ 1, 2, 3, 4, 10, 14, 15, 20, 25 ] }
+>
+
+★ 배열에 값 제거하기 ->$pull
+
+db.inventory. updateOne( { item: "journal" }, { $pull: {sold_id: 1 }})
+
+
+> db.inventory.find({item:"journal"})
+{ "_id" : ObjectId("5dca50ec99829b057884b7e6"), "item" : "journal", "sold_id" : [ 1, 2, 3, 4, 10, 14, 15, 20, 25 ] }
+> db.inventory. updateOne( { item: "journal" }, { $pull: {sold_id: 1 }})
+{ "acknowledged" : true, "matchedCount" : 1, "modifiedCount" : 1 }
+> db.inventory.find({item:"journal"})
+{ "_id" : ObjectId("5dca50ec99829b057884b7e6"), "item" : "journal", "sold_id" : [ 2, 3, 4, 10, 14, 15, 20, 25 ] }
+>
+
+★배열에서 값 여러개 제거하기 -> $pull + $in
+db.inventory. updateOne( { item: "journal" }, { $pull: {sold_id: {$in: [15,20,25]} }})
+
+
+> db.inventory.find({item:"journal"})
+{ "_id" : ObjectId("5dca50ec99829b057884b7e6"), "item" : "journal", "sold_id" : [ 2, 3, 4, 10, 14, 15, 20, 25 ] }
+> db.inventory. updateOne( { item: "journal" }, { $pull: {sold_id: {$in: [15,20,25]} }})
+{ "acknowledged" : true, "matchedCount" : 1, "modifiedCount" : 1 }
+>
+> db.inventory.find({item:"journal"})
+{ "_id" : ObjectId("5dca50ec99829b057884b7e6"), "item" : "journal", "sold_id" : [ 2, 3, 4, 10, 14 ] }
+>
+
+
+
+★★Delete명령어
+
+★하나의 데이터를 삭제하고 싶을때
+
+db.user.deleteOne({username: "karoid"}, <options>)
+
+
+
+> db.user.find()
+{ "_id" : ObjectId("5dc26e23ddf190c3dccf28d2"), "username" : "karoid", "password" : 1111 }
+{ "_id" : ObjectId("5dc26e2bddf190c3dccf28d3"), "username" : "hello", "password" : 1111 }
+{ "_id" : ObjectId("5dc2bee63cea8f8ca57ca2fc"), "username" : "hi", "password" : 1111 }
+{ "_id" : ObjectId("5dc2bee63cea8f8ca57ca2fd"), "username" : "kkk", "passward" : 1111 }
+
+> db.user.deleteOne({username:"karoid"})
+{ "acknowledged" : true, "deletedCount" : 1 }
+
+> db.user.find()
+{ "_id" : ObjectId("5dc26e2bddf190c3dccf28d3"), "username" : "hello", "password" : 1111 }
+{ "_id" : ObjectId("5dc2bee63cea8f8ca57ca2fc"), "username" : "hi", "password" : 1111 }
+{ "_id" : ObjectId("5dc2bee63cea8f8ca57ca2fd"), "username" : "kkk", "passward" : 1111 }
+>
+
+
+★다수의 데이터를 삭제하고 싶을때
+db.user.deleteMany({password: 1111}, <options>)
+
+
+★database, collection을 삭제하고 싶을때
+
+db.database.drop()
+
+db.dropDatabase()
+
+
+
+
+★★집합 파이프라인
+
+집합파이프라인이란? 데이터베이스로부터 원하는 데이터로가공하여 출력받는 방법
+
+Pipeline(파이프라인)이란?
+컴퓨터과학에서 한 데이터 처리 단계의 출력이 다음 단계의 입력으로 이어지는 형태로 연결된 구조
+
+
+★aggregate함수구조
+db.collection.aggregate(
+{pipeline},{options}
+)
+
+db.collection.aggregate([{stage}, ...], options)
+
+사진첨부
+
+
+★Stage
+pipeline -> stage연속묶음
+
+{$match : {query}}
+해당 쿼리에 해당하는 문서만 선택, find와 같은 역할
+
+
+{$group:{_id: {expression},{field1} : {{accumulator1} : {expression1}}, ....}}
+_id값으로 설정되는 값으로 그룹핑하고 임의로 설정한 필드에 그룹안의 값을 계산(accumulator)해서 집어넣을 수 있다.
+
+{accumulator}
+$sum 합
+$avg 평균
+$first 첫번째
+$last 마지막
+$max 최대값
+$min 최소값
+$push 배열로
+$addToSet unique한 배열로
+
+
+예제 기본데이터
+{"_id":1,"item":"abc","price":10,"quantity":2}
+{"_id":2,"item":"jkl","price":20,"quantity":1}
+{"_id":3,"item":"xyz","price":5,"quantity":10}
+{"_id":4,"item":"xyz","price":5,"quantity":20}
+{"_id":5,"item":"abc","price":10,"quantity":10}
+
+db.sales.aggregate(
+[
+{
+$group:{
+//_id값은 상관하지 않는다. null로 통일
+_id:null,
+//totalPrice는 price와 quantity의 곱의 총합
+totalPrice:{$sum:{$muultiply:["$price","$quantity"]}},
+//averageQuantity는 quantity의 평균값
+averageQuantity:{$avg:"$quantity"},
+//각 document값 하나당 count++
+count:{$sum:1}
+}
+}
+]
+)
+
+
+결과
+
+{"_id":null, "totalPrice":290,"averageQuantity":8.6,"count":5}

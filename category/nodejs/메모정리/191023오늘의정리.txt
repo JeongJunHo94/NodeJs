@@ -1,0 +1,127 @@
+https://betoru.github.io/
+깃헙브로그 이사람꺼 참고할 것.
+카테고리 추가관련
+
+★루프(반복)
+if문과 while문
+
+★Array data type
+배열에서도 'CRUD'
+[]
+push -> 배열에 데이터 넣기
+
+★array & loop
+
+★nodejs에서 파일목록 알아내기
+
+var http = require('http');
+var fs = require('fs');
+//require 요구하다 무엇을? url을.
+//기능을 비슷한 것 끼리 그룹핑 해놓은 것을 모듈이라고 함. url이라는 모듈을 사용
+var url = require('url');
+
+
+var app = http.createServer(function(request, response) {
+  var _url = request.url;
+  //queryData에 담겨있는 값은 객체이다.
+  var queryData = url.parse(_url, true).query;
+  console.log(require('url').parse(request.url, true));
+  var pathname = url.parse(_url, true).pathname;
+
+
+  //주어진 URL정보를 분석해서 보여준다.
+  // console.log(url.parse(_url, true));
+  // console.log(url.parse(_url, true).pathname);
+
+  if (pathname === '/') {
+    if (queryData.id === undefined) {
+//특정 디렉토리에서 파일을 읽어서 description이라고 하는 변수값을 생성해주는 코드
+      fs.readFile(`data/${queryData.id}`, 'utf8', function(err, description) {
+
+        var title = 'Welcome';
+        var description = "Hello, Node.js";
+        var template = `
+         <!doctype html>
+         <html>
+         <head>
+           <title>WEB1 - ${title}</title>
+           <meta charset="utf-8">
+         </head>
+         <body>
+           <h1><a href="/">WEB</a></h1>
+           <ol>
+             <li><a href="/?id=HTML">HTML</a></li>
+             <li><a href="/?id=CSS">CSS</a></li>
+             <li><a href="/?id=JavaScript">JavaScript</a></li>
+           </ol>
+           <h2>${title}</h2>
+           <p>${description}</p>
+         </body>
+         </html>
+         `;
+        response.writeHead(200);
+        // response.end(fs.readFileSync(__dirname + url));
+        //사용자가 접속한 url에 따라서 다른 파일들을 읽어주는 코드
+        //queryData.id에서  template로 변경
+        response.end(template);
+      });
+    } else {
+      //data디렉토리 밑에 있는 queryData.id =title
+      fs.readFile(`data/${queryData.id}`, 'utf8', function(err, description){
+        var title = queryData.id;
+        var template = `
+         <!doctype html>
+         <html>
+         <head>
+         <title>WEB1 - ${title}</title>
+         <meta charset="utf-8">
+         </head>
+         <body>
+         <h1><a href="/">WEB</a></h1>
+         <ol>
+         <li><a href="/?id=HTML">HTML</a></li>
+         <li><a href="/?id=CSS">CSS</a></li>
+         <li><a href="/?id=JavaScript">JavaScript</a></li>
+         </ol>
+         <h2>${title}</h2>
+         <p>${description}</p>
+         </body>
+         </html>
+         `;
+        response.writeHead(200);
+        // response.end(fs.readFileSync(__dirname + url));
+        //사용자가 접속한 url에 따라서 다른 파일들을 읽어주는 코드
+        //queryData.id에서  template로 변경
+        response.end(template);
+      });
+    }
+  } else {
+    response.writeHead(404);
+    response.end('Not Found');
+  }
+});
+app.listen(3000);
+
+해당 코드가 너무 수정하기 귀찮다. 어떻게?
+파일이 수정 추가 삭제되었을때 어떻게 node를 통해서 알아낼
+수 있을까?
+
+nodejs file list in directory
+
+visual studio code에서 주석단축키 ctrl+/작동안할때?
+->vscode클릭후 시작표시줄우측에 입력기가 한컴입력기로 되어있으면 microsoft입력기로 변경하면 됨.
+
+fs.readir를 통해 폴더에 파일이 추가되면 해당
+파일을 자동으로 수정추가삭제를 진행.
+
+var testFolder = './data';
+var fs = require('fs');
+
+fs.readdir(testFolder, function(error, filelist){
+  console.log(filelist);
+  
+})
+
+
+
+★함수
